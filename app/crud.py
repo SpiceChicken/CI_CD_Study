@@ -1,46 +1,32 @@
-from .database import SessionLocal
-from .models import URL
-import random, string
-import redis
-import os
+# app/crud.py
+from sqlalchemy.orm import Session
+from app import models
+import random
+import string
 
-# Redis 연결
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-r = redis.Redis.from_url(redis_url)
+# short_key 생성: 랜덤 문자열 생성
+def generate_short_key(length=6):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
 
-def generate_code(length=6):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-def create_short_url(original_url: str):
-    db = SessionLocal()
-    code = generate_code()
-
-    # DB 저장
-    db_url = URL(original_url=original_url, short_code=code)
+# URL 삽입
+def create_url(db: Session, target_url: str):
+    short_key = generate_short_key()
+    db_url = models.URL(target_url=target_url, short_key=short_key)
     db.add(db_url)
     db.commit()
     db.refresh(db_url)
+    return db_url
 
-    # Redis 캐시 저장
-    r.set(code, original_url)
+# URL 찾기
+def get_url(db: Session, short_key: str):
+    return db.query(models.URL).filter(models.URL.short_key == short_key).first()
 
-    return {"short_url": f"http://localhost:8000/r/{code}"}
-
-def resolve_short_url(code: str):
-    # Redis 캐시 먼저 조회
-    cached_url = r.get(code)
-    if cached_url:
-        return {"original_url": cached_url.decode("utf-8")}
-
-    # 없으면 DB 조회
-    db = SessionLocal()
-    db_url = db.query(URL).filter(URL.short_code == code).first()
+# URL 활성화 상태 변경
+def deactivate_url(db: Session, short_key: str):
+    db_url = db.query(models.URL).filter(models.URL.short_key == short_key).first()
     if db_url:
-        # Redis에 캐시 저장
-        r.set(code, db_url.original_url)
-
-        db_url.clicks += 1
+        db_url.is_active = 0
         db.commit()
-        return {"original_url": db_url.original_url}
-
-    return {"error": "Not found"}
+        db.refresh(db_url)
+    return db_url

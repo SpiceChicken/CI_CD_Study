@@ -1,20 +1,11 @@
+# app/main.py
 from fastapi import FastAPI
-from .database import engine, Base
-from . import models
-from . import crud
+from app.routers import url
+from app.database import engine, Base
 
+# 데이터베이스 테이블 생성
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.get("/")
-def root():
-    return {"message": "URL Shortener is alive"}
-
-@app.post("/shorten")
-def shorten_url(original_url: str):
-    return crud.create_short_url(original_url)
-
-@app.get("/r/{code}")
-def redirect(code: str):
-    return crud.resolve_short_url(code)
+app.include_router(url.router)
