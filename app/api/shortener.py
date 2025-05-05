@@ -1,22 +1,25 @@
-# app/routers/url.py: URL 관련 API 엔드포인트 정의 모듈
+# app/api/shortener.py: URL 관련 API 엔드포인트 정의 모듈
 # - POST /shorten: 단축 URL 생성
 # - GET /{short_key}: 단축 URL 조회(리디렉션용 원본 URL 반환)
 # - DELETE /{short_key}: 단축 URL 비활성화 처리
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
-from app.core import utils
-from app.crud import url
+from app.utils import url_valid
+from app.crud import shortener
 from app.db import session
-from app.models import url
-from app.schemas import url
+from app.models import shortener
+from app.schemas import shortener
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.utils.url_utils import generate_short_path
 
 router = APIRouter()
 # APIRouter 인스턴스: URL 관련 엔드포인트 그룹 관리
 
 # URL 단축 엔드포인트
-@router.post("/shorten", response_model=url.URLResponse)
-def shorten_url(url: url.URLCreate, db: Session = Depends(session.get_db)):
+@router.post("/shorten", response_model=shortener.URLResponse)
+def shorten_url(url: shortener.URLCreate,db: Session = Depends(session.get_db)):
     """
     URL 단축 엔드포인트
     - 경로: POST /shorten
@@ -24,8 +27,9 @@ def shorten_url(url: url.URLCreate, db: Session = Depends(session.get_db)):
     - 동작: 원본 URL 저장 및 무작위 단축 키 생성
     - 반환: URLResponse(id, target_url, short_key, is_active)
     """
+
     # 입력된 URL이 유효한지 확인
-    if not utils.is_url_valid(url.target_url):
+    if not url_valid.is_url_valid(url.target_url):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or unreachable URL"
@@ -33,7 +37,7 @@ def shorten_url(url: url.URLCreate, db: Session = Depends(session.get_db)):
 
     # URL이 유효하면 데이터베이스에 저장
     try:
-        db_url = url.create_url(db, target_url=url.target_url)
+        db_url = shortener.create_url(db, target_url=url.target_url)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -73,7 +77,7 @@ def deactivate_url(short_key: str, db: Session = Depends(session.get_db)):
     - 반환: 성공 메시지 JSON
     - 에러: 키 미존재 시 HTTP 404 예외 발생
     """
-    db_url = url.deactivate_url(db, short_key=short_key)
+    db_url = shortener.deactivate_url(db, short_key=short_key)
     if db_url is None:
         raise HTTPException(status_code=404, detail="URL not found")
     return {"message": "URL successfully deactivated"}
@@ -91,9 +95,9 @@ def get_click_info(short_key: str, db: Session = Depends(session.get_db)):
         "is_active": url.is_active
     }
 
-@router.get("/stats/{short_key}", response_model=url.URLStats)
+@router.get("/stats/{short_key}", response_model=shortener.URLStats)
 def get_url_stats(short_key: str, db: Session = Depends(session.get_db)):
-    db_url = url.get_url_stats(db, short_key=short_key)
+    db_url = shortener.get_url_stats(db, short_key=short_key)
     if not db_url:
         raise HTTPException(status_code=404, detail="URL not found")
     return db_url
