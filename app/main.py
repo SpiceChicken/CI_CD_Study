@@ -5,8 +5,8 @@
 # URL 단축 기능을 제공하는 라우터를 등록합니다.
 
 from fastapi import FastAPI
-from app.routers import url
-from app.database import engine, Base
+from app.api import shortener
+from app.db.session import engine, Base
 
 # 데이터베이스 테이블 생성: 정의된 ORM 모델을 기반으로 실제 테이블을 생성하거나 반영합니다.
 Base.metadata.create_all(bind=engine)
@@ -15,4 +15,4 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 # URL 관련 라우터 등록: 단축, 리디렉션, 비활성화 엔드포인트 활성화
-app.include_router(url.router)
+app.include_router(shortener.router)

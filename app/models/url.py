@@ -1,7 +1,7 @@
 # app/models.py: SQLAlchemy ORM 모델 정의 모듈
 # - URL: urls 테이블 매핑 모델 (원본 URL, 단축 키, 활성 상태 관리)
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from app.database import Base  # SQLAlchemy Base
+from app.db.session import Base  # SQLAlchemy Base
 from datetime import datetime
 
 class URL(Base):
