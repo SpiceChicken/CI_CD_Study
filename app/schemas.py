@@ -25,7 +25,7 @@ class URLResponse(BaseModel):
     id: int
     target_url: str
     short_key: str
-    is_active: int  # URL 활성 상태
+    is_active: bool  # URL 활성 상태
 
     class Config:
         orm_mode = True  # ORM 모델을 JSON으로 자동 변환 허용

@@ -2,9 +2,10 @@
 # - POST /shorten: 단축 URL 생성
 # - GET /{short_key}: 단축 URL 조회(리디렉션용 원본 URL 반환)
 # - DELETE /{short_key}: 단축 URL 비활성화 처리
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app import crud, schemas, database
+from starlette.responses import RedirectResponse
+from app import crud, schemas, database, models, utils
 
 router = APIRouter()
 # APIRouter 인스턴스: URL 관련 엔드포인트 그룹 관리
@@ -19,12 +20,27 @@ def shorten_url(url: schemas.URLCreate, db: Session = Depends(database.get_db)):
     - 동작: 원본 URL 저장 및 무작위 단축 키 생성
     - 반환: URLResponse(id, target_url, short_key, is_active)
     """
-    db_url = crud.create_url(db, target_url=url.target_url)
+    # 입력된 URL이 유효한지 확인
+    if not utils.is_url_valid(url.target_url):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or unreachable URL"
+        )
+
+    # URL이 유효하면 데이터베이스에 저장
+    try:
+        db_url = crud.create_url(db, target_url=url.target_url)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create URL: {str(e)}"
+        )
+    
     return db_url
 
 # 단축된 URL을 원본 URL로 리디렉션
 @router.get("/{short_key}")
-def redirect_to_url(short_key: str, db: Session = Depends(database.get_db)):
+def redirect_to_target(short_key: str, db: Session = Depends(database.get_db)):
     """
     단축 URL 조회 엔드포인트
     - 경로: GET /{short_key}
@@ -32,10 +48,15 @@ def redirect_to_url(short_key: str, db: Session = Depends(database.get_db)):
     - 동작: 단축 키로 URL 조회 후 활성 상태인 경우 원본 URL 반환
     - 에러: URL 미존재 또는 비활성 시 HTTP 404 예외
     """
-    db_url = crud.get_url(db, short_key=short_key)
-    if db_url is None or db_url.is_active == 0:
-        raise HTTPException(status_code=404, detail="URL not found or inactive")
-    return {"target_url": db_url.target_url}
+    url = db.query(models.URL)\
+            .filter(models.URL.short_key == short_key, models.URL.is_active)\
+            .first()
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+
+    url.clicks += 1
+    db.commit()
+    return RedirectResponse(url.target_url)
 
 # URL 비활성화 엔드포인트
 @router.delete("/{short_key}")
@@ -52,3 +73,16 @@ def deactivate_url(short_key: str, db: Session = Depends(database.get_db)):
     if db_url is None:
         raise HTTPException(status_code=404, detail="URL not found")
     return {"message": "URL successfully deactivated"}
+
+@router.get("/urls/{short_key}")
+def get_click_info(short_key: str, db: Session = Depends(database.get_db)):
+    url = db.query(models.URL).filter(models.URL.short_key == short_key).first()
+
+    if not url:
+        raise HTTPException(status_code=404, detail="URL not found")
+
+    return {
+        "target_url": url.target_url,
+        "clicks": url.clicks,
+        "is_active": url.is_active
+    }
