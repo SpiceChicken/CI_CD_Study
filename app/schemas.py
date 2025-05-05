@@ -3,6 +3,8 @@
 # - URLResponse: 단축 URL 생성/조회 응답 스키마
 
 from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
 class URLCreate(BaseModel):
     """
@@ -29,3 +31,11 @@ class URLResponse(BaseModel):
 
     class Config:
         orm_mode = True  # ORM 모델을 JSON으로 자동 변환 허용
+
+class URLStats(BaseModel):
+    short_key: str
+    target_url: str
+    clicks: int
+    is_active: bool
+    created_at: datetime
+    expires_at: Optional[datetime]

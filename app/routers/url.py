@@ -86,3 +86,10 @@ def get_click_info(short_key: str, db: Session = Depends(database.get_db)):
         "clicks": url.clicks,
         "is_active": url.is_active
     }
+
+@router.get("/stats/{short_key}", response_model=schemas.URLStats)
+def get_url_stats(short_key: str, db: Session = Depends(database.get_db)):
+    db_url = crud.get_url_stats(db, short_key=short_key)
+    if not db_url:
+        raise HTTPException(status_code=404, detail="URL not found")
+    return db_url

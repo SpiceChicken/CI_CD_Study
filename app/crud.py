@@ -73,3 +73,6 @@ def deactivate_url(db: Session, short_key: str) -> models.URL:
         db.commit()
         db.refresh(db_url)
     return db_url
+
+def get_url_stats(db: Session, short_key: str):
+    return db.query(models.URL).filter(models.URL.short_key == short_key).first()
