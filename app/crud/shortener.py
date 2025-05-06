@@ -44,7 +44,7 @@ def create_url(db: Session, target_url: str) -> shortener.URL:
     if existing_url:
         return existing_url
         
-    short_key = generate_short_key()
+    short_key = generate_short_key(db=db)
     db_url = shortener.URL(target_url=target_url, short_key=short_key)
     db.add(db_url)
     db.commit()
