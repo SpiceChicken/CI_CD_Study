@@ -10,12 +10,11 @@ services:
     depends_on:
       - db
       - redis
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/url_db
-      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env
     command: >
       sh -c "
-        ./wait-for-db.sh && 
+        /app/wait-for-db.sh &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000
       "
 
