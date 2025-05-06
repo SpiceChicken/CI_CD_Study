@@ -3,17 +3,21 @@
 
 import random
 import string
+import secrets
 from sqlalchemy.orm import Session
 from app.models import shortener
 
-def generate_short_key(length: int = 6) -> str:
+def generate_short_key(db: Session, length: int = 6) -> str:
     """
     지정된 길이의 무작위 단축 키를 생성합니다.
     - length: 생성할 키의 길이 (기본값 6)
     - 반환: 영문 대소문자와 숫자로 구성된 문자열
     """
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
+    while True:
+        key = secrets.token_urlsafe(length)[:length]
+        exists = db.query(shortener.URL).filter_by(short_key=key).first()
+        if not exists:
+            return key
 
 def get_url_by_target_url(db: Session, target_url: str) -> shortener.URL:
     """
