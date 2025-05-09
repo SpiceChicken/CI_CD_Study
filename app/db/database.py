@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # 환경 변수에서 DATABASE_URL을 읽어옵니다. 없으면 기본값(postgresql://postgres:postgres@db:5432/url_db)을 사용
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/url_db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # SQLAlchemy 엔진 생성: DB 연결을 관리하는 주요 객체
 engine = create_engine(DATABASE_URL)

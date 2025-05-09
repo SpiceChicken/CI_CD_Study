@@ -5,13 +5,18 @@
 # URL 단축 기능을 제공하는 라우터를 등록합니다.
 
 from fastapi import FastAPI
-from app.api import shortener, auth
-from app.db.session import Base, engine
+from app.user.api import v1 as user_api
+from app.shortener.api import v1 as shortener_api
+from app.analytics.api import v1 as analytics_api
+
+from app.db.database import Base, engine
+
 
 app = FastAPI(title="URL Shortener with Auth")
 
-app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
-app.include_router(shortener.router, prefix="/api/shortener", tags=["shortener"])
+app.include_router(user_api.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(shortener_api.router, prefix="/api/shortener", tags=["shortener"])
+app.include_router(analytics_api.router, prefix="/api/analytics", tags=["analytics"])
 
 # 자동 테이블 생성 (개발용)
 Base.metadata.create_all(bind=engine)

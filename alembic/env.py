@@ -6,8 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 # 이 부분을 수정하여 SQLAlchemy 모델을 자동으로 반영합니다.
-from app.models import Base  # 여기서 Base는 모든 모델 클래스가 상속하는 기본 클래스입니다.
-from app.models import URL  # URL 모델 import
+from app.db.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,10 +17,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+# 메타데이터 병합을 위한 방법
 target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,

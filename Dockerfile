@@ -4,6 +4,9 @@ RUN apt-get update && apt-get install -y postgresql-client redis-tools
 
 WORKDIR /app
 
+# Python import 경로 인식 설정
+ENV PYTHONPATH=/app
+
 # requirements.txt를 먼저 복사해서 캐시 활용
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
