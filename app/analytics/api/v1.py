@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 
@@ -11,15 +11,17 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 @router.get("/{code}", response_model=AnalyticsResponse)
 def read_analytics(code: str, db: Session = Depends(get_db)):
     """단축코드의 전체 클릭 수와 로그 목록을 반환"""
-    logs = get_clicks(db, code)
+    click_logs = get_clicks(db, code)
+    click_logs_infos: list[ClickLogInfo] = []
+    for log_entry in click_logs:
+        click_log_info_entry = ClickLogInfo(           
+            timestamp=log_entry.timestamp,
+            client_ip=log_entry.client_ip,
+            user_agent=log_entry.user_agent
+        )
+        click_logs_infos.append(click_log_info_entry)
+    
     return AnalyticsResponse(
-        total_clicks=len(logs),
-        logs=logs,
+        total_clicks=len(click_logs),
+        logs=click_logs_infos,
     )
-
-# Shortener redirect 로직에 로깅 추가 예시:
-# from fastapi.responses import RedirectResponse
-# @router.get("/redirect/{code}")
-# def redirect_and_log(code: str, request: Request, db: Session = Depends(get_db)):
-#     log = crud.log_click(db, code, request.client.host, request.headers.get('user-agent'))
-#     return RedirectResponse(existing_url)

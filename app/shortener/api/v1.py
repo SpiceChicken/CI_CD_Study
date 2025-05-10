@@ -2,7 +2,7 @@
 # - POST /shorten: 단축 URL 생성
 # - GET /{short_code}: 단축 URL 조회(리디렉션용 원본 URL 반환)
 # - DELETE /{short_code}: 단축 URL 비활성화 처리
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from starlette.responses import RedirectResponse
 from app.utils.url_valid import is_url_valid
@@ -11,6 +11,9 @@ from app.db.database import get_db
 from app.shortener.crud import *
 from app.shortener.models import URL
 from app.shortener.schemas import *
+
+from app.analytics.crud import log_click
+from app.analytics.models import ClickLog
 
 from app.auth.security import get_current_user
 from app.user.models import User
@@ -48,7 +51,7 @@ def shorten_url(url: URLCreate,db: Session = Depends(get_db)):
 
 # 단축된 URL을 원본 URL로 리디렉션
 @router.get("/{short_code}")
-def redirect_to_target(short_code: str, db: Session = Depends(get_db)):
+def redirect_to_target(short_code: str, request: Request ,db: Session = Depends(get_db)):
     """
     단축 URL 조회 엔드포인트
     - 경로: GET /{short_code}
@@ -61,6 +64,14 @@ def redirect_to_target(short_code: str, db: Session = Depends(get_db)):
             .first()
     if not url:
         raise HTTPException(status_code=404, detail="URL not found")
+    
+    # 클릭 로그 기록
+    log_click(
+        db=db,
+        code=short_code,
+        client_ip=request.client.host,
+        user_agent=request.headers.get("user-agent")
+    )
 
     # 클릭 수 증가
     url.clicks += 1
