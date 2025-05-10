@@ -7,7 +7,7 @@ class URL(Base):
     URLs 테이블 ORM 모델 클래스
     - id: 고유 식별자 (Primary Key)
     - target_url: 저장할 원본 URL
-    - short_key: 생성된 단축 키 (Unique)
+    - short_code: 생성된 단축 키 (Unique)
     - is_active: 활성 상태 표시 (True=활성, False=비활성)
     """
     __tablename__ = "urls"

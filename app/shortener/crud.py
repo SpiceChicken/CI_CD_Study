@@ -7,7 +7,7 @@ import secrets
 from sqlalchemy.orm import Session
 from app.shortener.models import URL
 
-def generate_short_key(db: Session, length: int = 6) -> str:
+def generate_short_code(db: Session, length: int = 6) -> str:
     """
     지정된 길이의 무작위 단축 키를 생성합니다.
     - length: 생성할 키의 길이 (기본값 6)
@@ -15,7 +15,7 @@ def generate_short_key(db: Session, length: int = 6) -> str:
     """
     while True:
         key = secrets.token_urlsafe(length)[:length]
-        exists = db.query(URL).filter_by(short_key=key).first()
+        exists = db.query(URL).filter_by(short_code=key).first()
         if not exists:
             return key
 
@@ -44,39 +44,39 @@ def create_url(db: Session, target_url: str) -> URL:
     if existing_url:
         return existing_url
         
-    short_key = generate_short_key(db=db)
-    db_url = URL(target_url=target_url, short_key=short_key)
+    short_code = generate_short_code(db=db)
+    db_url = URL(target_url=target_url, short_code=short_code)
     db.add(db_url)
     db.commit()
     db.refresh(db_url)
     return db_url
 
-def get_url(db: Session, short_key: str) -> URL:
+def get_url(db: Session, short_code: str) -> URL:
     """
     주어진 단축 키로 URL 레코드를 조회합니다.
     - db: SQLAlchemy 세션
-    - short_key: 조회할 단축 키 문자열
+    - short_code: 조회할 단축 키 문자열
     - 반환: URL 모델 객체 또는 None
     """
-    return db.query(URL).filter(URL.short_key == short_key).first()
+    return db.query(URL).filter(URL.short_code == short_code).first()
 
-def deactivate_url(db: Session, short_key: str) -> URL:
+def deactivate_url_from_db(db: Session, short_code: str) -> URL:
     """
     주어진 단축 키의 URL 레코드를 비활성화 처리합니다.
     - db: SQLAlchemy 세션
-    - short_key: 비활성화할 단축 키 문자열
+    - short_code: 비활성화할 단축 키 문자열
     동작:
       1. 해당 키로 URL 레코드 조회
       2. is_active를 False(비활성)으로 변경
       3. 커밋 및 새로고침 후 업데이트된 객체 반환
     - 반환: 업데이트된 URL 모델 객체 또는 None
     """
-    db_url = db.query(URL).filter(URL.short_key == short_key).first()
+    db_url = db.query(URL).filter(URL.short_code == short_code).first()
     if db_url:
         db_url.is_active = False
         db.commit()
         db.refresh(db_url)
     return db_url
 
-def get_url_stats(db: Session, short_key: str):
-    return db.query(URL).filter(URL.short_key == short_key).first()
+def get_url_stats_from_db(db: Session, short_code: str):
+    return db.query(URL).filter(URL.short_code == short_code).first()

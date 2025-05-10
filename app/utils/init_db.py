@@ -9,7 +9,7 @@ from app.db.database import engine, get_db
 from app.user import models as user_model
 from app.shortener import models as shortener_model
 from app.auth.security import hash_password
-from app.shortener.crud import generate_short_key
+from app.shortener.crud import generate_short_code
 
 DEFAULT_EMAIL = os.getenv("DEFAULT_USER_EMAIL")
 DEFAULT_PASSWORD = os.getenv("DEFAULT_USER_PASSWORD")
@@ -43,7 +43,7 @@ def init():
         if not exists:
             new_url = shortener_model.URL(
                 target_url=original_url,
-                short_key=generate_short_key(db=db),
+                short_code=generate_short_code(db=db),
             )
             db.add(new_url)
 
