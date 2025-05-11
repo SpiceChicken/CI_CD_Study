@@ -5,7 +5,7 @@
 # URL 단축 기능을 제공하는 라우터를 등록합니다.
 
 from fastapi import FastAPI
-from app.user.api import v1 as user_api
+from app.auth.api.user import router as user_router
 from app.shortener.api import v1 as shortener_api
 from app.analytics.api import v1 as analytics_api
 
@@ -37,7 +37,7 @@ openapi_security_requirements = [
 
 app = FastAPI(title="URL Shortener with Auth")
 
-app.include_router(user_api.router)
+app.include_router(user_router)
 app.include_router(shortener_api.router)
 app.include_router(analytics_api.router)
 

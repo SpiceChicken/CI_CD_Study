@@ -15,8 +15,8 @@ from app.shortener.schemas import *
 from app.analytics.crud import log_click
 from app.analytics.models import ClickLog
 
-from app.utils.security import get_current_user
-from app.user.models import User
+from app.security import get_current_user
+from app.auth.models.user import User
 
 router = APIRouter(
     prefix="/shortener/v1", # API 경로 접두사 설정

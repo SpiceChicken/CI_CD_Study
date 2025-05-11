@@ -7,10 +7,10 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from app.user.schemas import TokenData
-from app.user.models import User
+from app.auth.models.token import Token
+from app.auth.models.user import User
 from app.db.database import get_db
-from app.user import crud
+from app.auth import crud
 
 ALGORITHM = os.getenv("ALGORITHM","HS256")
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-here")
@@ -62,7 +62,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-        token_data = TokenData(email=email)
+        token_data = Token(email=email)
     except JWTError:
         raise credentials_exception
 
