@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -15,7 +17,7 @@ services:
     command: >
       sh -c "
         /app/wait-for-db.sh &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
 
   db:
@@ -39,3 +41,5 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+## LOCAL TEST

@@ -6,7 +6,9 @@ from app.analytics.crud import *
 from app.analytics.models import *
 from app.analytics.schemas import *
 
-router = APIRouter(prefix="/analytics", tags=["analytics"])
+router = APIRouter(
+    prefix="/analytics/v1", # API 경로 접두사 설정
+    tags=["analytics"])
 
 @router.get("/{code}", response_model=AnalyticsResponse)
 def read_analytics(code: str, db: Session = Depends(get_db)):

@@ -15,10 +15,14 @@ from app.shortener.schemas import *
 from app.analytics.crud import log_click
 from app.analytics.models import ClickLog
 
-from app.auth.security import get_current_user
+from app.utils.security import get_current_user
 from app.user.models import User
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/shortener/v1", # API 경로 접두사 설정
+    tags=["shortener"]
+)
+
 
 # URL 단축 엔드포인트
 @router.post("/shorten", response_model=URLResponse)

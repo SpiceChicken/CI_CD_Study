@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app.db.database import engine, get_db
 from app.user import models as user_model
 from app.shortener import models as shortener_model
-from app.auth.security import hash_password
+from app.utils.security import get_password_hash
 from app.shortener.crud import generate_short_code
 
 DEFAULT_EMAIL = os.getenv("DEFAULT_USER_EMAIL")
@@ -25,7 +25,7 @@ def init():
     if not user:
         user = user_model.User(
             email=DEFAULT_EMAIL,
-            hashed_password=hash_password(DEFAULT_PASSWORD),
+            hashed_password=get_password_hash(DEFAULT_PASSWORD),
         )
         db.add(user)
         db.commit()
