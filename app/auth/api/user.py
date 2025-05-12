@@ -101,9 +101,9 @@ def login_for_access_token(user_login: UserLogin, db: Session = Depends(get_db))
     # 4. JWT 액세스 토큰 생성 (utils 모듈의 create_access_token 함수 사용)
     access_token = security.create_access_token(data={"sub": user.email})
     refresh_token = security.create_refresh_token(data={"sub": user.email})
-    create_token(db, token=refresh_token, token_type='refresh', user_id=user.id, expires_delta=REFRESH_TOKEN_EXPIRE_DAYS)
+    create_token(db, token=refresh_token, token_type='refresh', user_id=user.id, expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
 
-    return {"access_token": access_token, "token_type": "bearer", "refresh_token": REFRESH_TOKEN_EXPIRE_DAYS}
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 # 토큰 리프레시 엔드포인트 (리프레시 토큰 -> 새 액세스 토큰 발급)
